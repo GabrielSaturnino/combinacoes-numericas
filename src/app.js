@@ -285,12 +285,26 @@
     toast('Limpo!');
   }
 
-  function onExample() {
-    distributeDigits(0, '147036925');
+  function randomUniqueDigits(count = 9) {
+    const pool = Array.from({length: 10}, (_, i) => String(i));
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    return pool.slice(0, count);
+  }
+
+  function clearPairsUI() {
     els.pairsGrid.innerHTML = '';
     els.pairsMeta.textContent = '—';
     els.btnCopy.disabled = true;
-    toast('Exemplo aplicado!');
+  }
+
+  function onExample() {
+    const digits = randomUniqueDigits(9);
+    distributeDigits(0, digits.join(''));
+    clearPairsUI();
+    toast(`Exemplo gerado: ${digits.join(', ')}`);
     focusField(0);
   }
 
