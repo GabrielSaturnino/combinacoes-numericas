@@ -245,11 +245,24 @@
     }
   }
 
+  function sortPairsAscending(pairs) {
+    return [...pairs].sort((p1, p2) => {
+      const n1 = Number(p1.concat);
+      const n2 = Number(p2.concat);
+
+      if (n1 !== n2) return n1 - n2;
+
+      if (p1.concat !== p2.concat) return p1.concat.localeCompare(p2.concat);
+      if (p1.i !== p2.i) return p1.i - p2.i;
+      return p1.j - p2.j;
+    });
+  }
+
   function onGenerate() {
     const {values, filled, allValid} = readValues();
     if (!(filled === 9 && allValid)) return toast('Preenche os 9 dígitos (0–9) antes de gerar 😉');
 
-    const pairs = generatePairs(values);
+    const pairs = sortPairsAscending(generatePairs(values));
     renderPairs(pairs);
     els.pairsMeta.textContent = `${pairs.length} pares gerados (36 combinações)`;
     els.btnCopy.disabled = false;
@@ -260,7 +273,7 @@
     const {values, filled, allValid} = readValues();
     if (!(filled === 9 && allValid)) return;
 
-    const pairs = generatePairs(values);
+    const pairs = sortPairsAscending(generatePairs(values));
     const text = buildCopyText(pairs);
 
     try {
@@ -304,8 +317,6 @@
     const digits = randomUniqueDigits(9);
     distributeDigits(0, digits.join(''));
     clearPairsUI();
-    toast(`Exemplo gerado: ${digits.join(', ')}`);
-    focusField(0);
   }
 
   function init() {
