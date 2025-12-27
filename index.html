@@ -1,424 +1,13 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Jogo da Velha + Combinações em Pares</title>
-    <style>
-      :root {
-        --bg0: #070a12;
-        --bg1: #0a1230;
-        --stroke: rgba(255, 255, 255, 0.14);
-        --txt: rgba(255, 255, 255, 0.92);
-        --muted: rgba(255, 255, 255, 0.72);
-        --muted2: rgba(255, 255, 255, 0.55);
-        --shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
-        --shadow2: 0 10px 30px rgba(0, 0, 0, 0.38);
-        --r: 22px;
 
-        --a: #7c4dff;
-        --b: #00e5ff;
-        --c: #ff4dd8;
-        --d: #3dff9f;
-
-        --cell: 92px;
-        --gap: 14px;
-      }
-
-      * { box-sizing: border-box; }
-      html, body { height: 100%; }
-
-      body {
-        margin: 0;
-        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
-          "Apple Color Emoji", "Segoe UI Emoji";
-        color: var(--txt);
-        background: radial-gradient(1200px 600px at 10% 10%, rgba(124, 77, 255, 0.22), transparent 55%),
-          radial-gradient(900px 500px at 90% 25%, rgba(0, 229, 255, 0.18), transparent 55%),
-          radial-gradient(900px 600px at 70% 95%, rgba(255, 77, 216, 0.14), transparent 55%),
-          linear-gradient(180deg, var(--bg0), var(--bg1));
-        overflow-x: hidden;
-      }
-
-      .glow {
-        position: fixed;
-        inset: -40vmax;
-        pointer-events: none;
-        filter: blur(30px);
-        opacity: 0.65;
-        background: conic-gradient(
-          from 180deg at 50% 50%,
-          rgba(124, 77, 255, 0.45),
-          rgba(0, 229, 255, 0.35),
-          rgba(255, 77, 216, 0.3),
-          rgba(61, 255, 159, 0.22),
-          rgba(124, 77, 255, 0.45)
-        );
-        animation: spin 18s linear infinite;
-      }
-      @keyframes spin { to { transform: rotate(360deg); } }
-
-      .noise {
-        position: fixed;
-        inset: 0;
-        pointer-events: none;
-        opacity: 0.08;
-        mix-blend-mode: overlay;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
-      }
-
-      .wrap {
-        max-width: 1100px;
-        margin: 0 auto;
-        padding: 42px 18px 64px;
-        position: relative;
-      }
-
-      header {
-        display: grid;
-        gap: 10px;
-        margin-bottom: 22px;
-      }
-
-      .badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        padding: 10px 14px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        width: fit-content;
-        box-shadow: var(--shadow2);
-        backdrop-filter: blur(10px);
-      }
-
-      .dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 999px;
-        background: linear-gradient(90deg, var(--a), var(--b));
-        box-shadow: 0 0 0 6px rgba(124, 77, 255, 0.12);
-      }
-
-      h1 {
-        margin: 0;
-        font-size: clamp(24px, 3.2vw, 38px);
-        line-height: 1.08;
-        letter-spacing: -0.03em;
-        text-shadow: 0 12px 50px rgba(0, 0, 0, 0.55);
-      }
-
-      .sub {
-        margin: 0;
-        color: var(--muted);
-        max-width: 70ch;
-        line-height: 1.5;
-      }
-
-      .grid {
-        display: grid;
-        grid-template-columns: 1.1fr 0.9fr;
-        gap: 18px;
-        margin-top: 18px;
-      }
-
-      @media (max-width: 920px) {
-        .grid { grid-template-columns: 1fr; }
-      }
-
-      .card {
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
-        border: 1px solid var(--stroke);
-        border-radius: var(--r);
-        padding: 18px;
-        box-shadow: var(--shadow);
-        backdrop-filter: blur(14px);
-        position: relative;
-        overflow: hidden;
-      }
-
-      .card::before {
-        content: "";
-        position: absolute;
-        inset: -2px;
-        background: radial-gradient(900px 260px at 15% 0%, rgba(0, 229, 255, 0.12), transparent 60%),
-          radial-gradient(800px 240px at 90% 10%, rgba(124, 77, 255, 0.12), transparent 60%),
-          radial-gradient(900px 260px at 40% 120%, rgba(255, 77, 216, 0.09), transparent 60%);
-        pointer-events: none;
-      }
-
-      .card > * { position: relative; z-index: 1; }
-
-      .titleRow {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 10px;
-      }
-
-      .titleRow h2 {
-        margin: 0;
-        font-size: 16px;
-        letter-spacing: 0.01em;
-        color: rgba(255, 255, 255, 0.88);
-      }
-
-      .hint { font-size: 12px; color: var(--muted2); }
-
-      /* inputs */
-      .inputs {
-        display: grid;
-        grid-template-columns: repeat(9, minmax(0, 1fr));
-        gap: 10px;
-        margin-top: 12px;
-      }
-      @media (max-width: 640px) { .inputs { grid-template-columns: repeat(3, 1fr); } }
-
-      .num {
-        width: 100%;
-        padding: 12px 0;
-        border-radius: 14px;
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        background: rgba(0, 0, 0, 0.18);
-        color: var(--txt);
-        outline: none;
-        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.22);
-        transition: transform 160ms ease, border-color 160ms ease, background 160ms ease,
-          box-shadow 160ms ease;
-        font-size: 18px;
-        text-align: center;
-        font-variant-numeric: tabular-nums;
-      }
-
-      .num:focus {
-        transform: translateY(-1px);
-        border-color: rgba(0, 229, 255, 0.45);
-        box-shadow: 0 0 0 4px rgba(0, 229, 255, 0.16), inset 0 0 0 1px rgba(0, 0, 0, 0.22);
-        background: rgba(0, 0, 0, 0.25);
-      }
-
-      .actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-top: 14px;
-        align-items: center;
-      }
-
-      button {
-        cursor: pointer;
-        border: 0;
-        color: rgba(255, 255, 255, 0.95);
-        font-weight: 650;
-        letter-spacing: 0.01em;
-        padding: 12px 14px;
-        border-radius: 14px;
-        transition: transform 140ms ease, filter 140ms ease, box-shadow 140ms ease,
-          background 140ms ease;
-        user-select: none;
-      }
-
-      .primary {
-        background: linear-gradient(90deg, rgba(124, 77, 255, 0.9), rgba(0, 229, 255, 0.75));
-        box-shadow: 0 12px 40px rgba(0, 229, 255, 0.12), 0 10px 26px rgba(124, 77, 255, 0.16);
-      }
-
-      .ghost {
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.18);
-      }
-
-      button:hover { transform: translateY(-1px); filter: brightness(1.05); }
-      button:active { transform: translateY(0px) scale(0.99); filter: brightness(0.98); }
-      button:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
-
-      .status {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-top: 10px;
-        color: var(--muted);
-        font-size: 13px;
-        min-height: 22px;
-      }
-
-      .pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 6px 10px;
-        border-radius: 999px;
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        background: rgba(255, 255, 255, 0.06);
-      }
-
-      .spark {
-        width: 10px;
-        height: 10px;
-        border-radius: 999px;
-        background: linear-gradient(90deg, var(--c), var(--d));
-        box-shadow: 0 0 0 6px rgba(61, 255, 159, 0.11);
-        animation: pulse 1.6s ease-in-out infinite;
-      }
-
-      @keyframes pulse {
-        0%, 100% { transform: scale(1); opacity: 0.9; }
-        50% { transform: scale(1.25); opacity: 1; }
-      }
-
-      /* board */
-      .board {
-        display: grid;
-        grid-template-columns: repeat(3, var(--cell));
-        gap: var(--gap);
-        justify-content: center;
-        margin-top: 12px;
-      }
-
-      @media (max-width: 420px) { :root { --cell: 82px; --gap: 12px; } }
-
-      .cell {
-        position: relative;
-        width: var(--cell);
-        height: var(--cell);
-        border-radius: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.12));
-        box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
-        overflow: hidden;
-        transform-style: preserve-3d;
-      }
-
-      .cell::before {
-        content: "";
-        position: absolute;
-        inset: -1px;
-        background: radial-gradient(220px 120px at 10% 10%, rgba(0, 229, 255, 0.14), transparent 60%),
-          radial-gradient(220px 120px at 90% 20%, rgba(124, 77, 255, 0.13), transparent 60%),
-          radial-gradient(240px 140px at 40% 110%, rgba(255, 77, 216, 0.11), transparent 60%);
-        opacity: 0.9;
-        pointer-events: none;
-      }
-
-      .cellInner {
-        position: absolute;
-        inset: 0;
-        display: grid;
-        place-items: center;
-        font-size: 26px;
-        font-weight: 800;
-        letter-spacing: -0.03em;
-        color: rgba(255, 255, 255, 0.94);
-        text-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
-        transition: transform 520ms cubic-bezier(0.2, 0.9, 0.2, 1), opacity 420ms ease;
-      }
-
-      .cell[data-animate="flip"] .cellInner { transform: rotateX(85deg) scale(0.96); opacity: 0.25; }
-      .cell[data-animate="pop"] .cellInner { animation: pop 520ms cubic-bezier(0.2, 0.9, 0.2, 1); }
-
-      @keyframes pop {
-        0% { transform: scale(0.86); opacity: 0.2; }
-        60% { transform: scale(1.08); opacity: 1; }
-        100% { transform: scale(1); opacity: 1; }
-      }
-
-      .cellTag {
-        position: absolute;
-        right: 10px;
-        bottom: 9px;
-        font-size: 11px;
-        color: rgba(255, 255, 255, 0.38);
-        letter-spacing: 0.06em;
-      }
-
-      /* pairs */
-      .pairsHead {
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        gap: 10px;
-        margin-top: 4px;
-      }
-
-      .pairsMeta { font-size: 12px; color: var(--muted2); }
-
-      .pairsBox {
-        margin-top: 12px;
-        border-radius: 18px;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        background: rgba(0, 0, 0, 0.18);
-        padding: 12px;
-        min-height: 170px;
-        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.22);
-      }
-
-      .pairsGrid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 10px;
-      }
-
-      @media (max-width: 920px) { .pairsGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-      @media (max-width: 520px) { .pairsGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-
-      .chip {
-        position: relative;
-        border-radius: 14px;
-        padding: 10px 10px;
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.14));
-        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.25);
-        overflow: hidden;
-        transform: translateY(8px);
-        opacity: 0;
-        animation: rise 520ms cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
-      }
-
-      @keyframes rise { to { transform: translateY(0); opacity: 1; } }
-
-      .chipMain {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-      }
-
-      .chipVal { font-weight: 850; letter-spacing: -0.02em; font-size: 15px; }
-      .chipSmall { color: rgba(255, 255, 255, 0.55); font-size: 11px; letter-spacing: 0.08em; }
-
-      .toast {
-        position: fixed;
-        left: 50%;
-        bottom: 18px;
-        transform: translateX(-50%);
-        max-width: min(680px, calc(100% - 24px));
-        padding: 12px 14px;
-        border-radius: 14px;
-        background: rgba(0, 0, 0, 0.55);
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        backdrop-filter: blur(14px);
-        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
-        display: none;
-        gap: 10px;
-        align-items: center;
-        color: rgba(255, 255, 255, 0.92);
-        font-size: 13px;
-      }
-
-      .toast.show {
-        display: inline-flex;
-        animation: toastIn 220ms ease-out;
-      }
-
-      @keyframes toastIn {
-        from { transform: translateX(-50%) translateY(12px); opacity: 0; }
-        to { transform: translateX(-50%) translateY(0); opacity: 1; }
-      }
-    </style>
+    <link rel="stylesheet" href="./src/styles.css" />
   </head>
+
   <body>
     <div class="glow" aria-hidden="true"></div>
     <div class="noise" aria-hidden="true"></div>
@@ -427,14 +16,13 @@
       <header>
         <div class="badge">
           <span class="dot"></span>
-          <span style="color: rgba(255, 255, 255, 0.85); font-weight: 650"
-            >Jogo da Velha • Pares • Animações</span
-          >
+          <span class="badgeText">Jogo da Velha • Pares • Animações</span>
         </div>
+
         <h1>Digite 9 dígitos e veja a mágica acontecer ✨</h1>
         <p class="sub">
-          Cada campo aceita <b>1 dígito (0–9)</b> e, ao digitar, já pula pro próximo.
-          Se colar vários dígitos, ele distribui automaticamente.
+          Cada campo aceita <b>1 dígito (0–9)</b> e auto-avança. Se colar vários dígitos, ele
+          distribui.
         </p>
       </header>
 
@@ -442,20 +30,120 @@
         <div class="card">
           <div class="titleRow">
             <h2>1) Seus 9 números</h2>
-            <span class="hint">Auto-avança</span>
+            <span class="hint">Auto-avança + glow premium</span>
           </div>
 
-          <!-- ✅ inputs existem e ficam visíveis -->
-          <div class="inputs" id="inputs"></div>
+          <div class="progressWrap" aria-label="Progresso de preenchimento">
+            <div class="progressBar"><div class="progressFill" id="progressFill"></div></div>
+            <div class="progressLabel" id="progressLabel">0/9</div>
+          </div>
+
+          <div class="inputs" id="inputs">
+            <input
+              class="num"
+              data-idx="0"
+              type="text"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              maxlength="1"
+              placeholder="1"
+              aria-label="Número 1"
+            />
+            <input
+              class="num"
+              data-idx="1"
+              type="text"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              maxlength="1"
+              placeholder="2"
+              aria-label="Número 2"
+            />
+            <input
+              class="num"
+              data-idx="2"
+              type="text"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              maxlength="1"
+              placeholder="3"
+              aria-label="Número 3"
+            />
+            <input
+              class="num"
+              data-idx="3"
+              type="text"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              maxlength="1"
+              placeholder="4"
+              aria-label="Número 4"
+            />
+            <input
+              class="num"
+              data-idx="4"
+              type="text"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              maxlength="1"
+              placeholder="5"
+              aria-label="Número 5"
+            />
+            <input
+              class="num"
+              data-idx="5"
+              type="text"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              maxlength="1"
+              placeholder="6"
+              aria-label="Número 6"
+            />
+            <input
+              class="num"
+              data-idx="6"
+              type="text"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              maxlength="1"
+              placeholder="7"
+              aria-label="Número 7"
+            />
+            <input
+              class="num"
+              data-idx="7"
+              type="text"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              maxlength="1"
+              placeholder="8"
+              aria-label="Número 8"
+            />
+            <input
+              class="num"
+              data-idx="8"
+              type="text"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              maxlength="1"
+              placeholder="9"
+              aria-label="Número 9"
+            />
+          </div>
 
           <div class="actions">
-            <button class="primary" id="btnGenerate" type="button">Gerar combinações em pares</button>
+            <button class="primary" id="btnGenerate" type="button">
+              Gerar combinações em pares
+            </button>
+            <button class="ghost" id="btnCopy" type="button" disabled>Copiar lista</button>
             <button class="ghost" id="btnClear" type="button">Limpar</button>
             <button class="ghost" id="btnExample" type="button">Exemplo</button>
           </div>
 
-          <div class="status" id="status">
-            <span class="pill"><span class="spark"></span><span id="statusText">Preencha os 9 campos.</span></span>
+          <div class="status">
+            <span class="pill"
+              ><span class="spark"></span><span id="statusText">Preencha os 9 campos.</span></span
+            >
             <span class="hint" id="countHint"></span>
           </div>
 
@@ -464,7 +152,7 @@
             <span class="hint">Atualiza em tempo real</span>
           </div>
 
-          <div class="board" id="board"></div>
+          <div class="board" id="board" aria-label="Tabuleiro 3 por 3"></div>
         </div>
 
         <div class="card">
@@ -475,315 +163,20 @@
 
           <div class="pairsHead">
             <div class="pairsMeta" id="pairsMeta">—</div>
-            <button class="ghost" id="btnCopy" type="button" disabled>Copiar lista</button>
+            <span class="hint">9 dígitos → 36 pares</span>
           </div>
 
           <div class="pairsBox">
-            <div class="pairsGrid" id="pairsGrid"></div>
+            <div class="pairsGrid" id="pairsGrid" aria-label="Lista de pares"></div>
           </div>
 
-          <div class="sub" style="margin-top: 10px; color: var(--muted2); font-size: 12px">
-            Clique num chip pra copiar só aquele par. Ou “Copiar lista” pra pegar tudo.
-          </div>
+          <div class="sub pairsHelp">Clique num chip pra copiar só aquele par.</div>
         </div>
       </section>
     </div>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-    <script>
-      // ========= helpers =========
-      const $ = (sel) => document.querySelector(sel);
-      const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
-
-      function toast(msg) {
-        const el = $("#toast");
-        el.textContent = msg;
-        el.classList.add("show");
-        clearTimeout(toast._t);
-        toast._t = setTimeout(() => el.classList.remove("show"), 1600);
-      }
-
-      function getFields() {
-        return [...document.querySelectorAll(".num")];
-      }
-
-      function focusField(idx) {
-        const fields = getFields();
-        const el = fields[clamp(idx, 0, fields.length - 1)];
-        el?.focus();
-        el?.select?.();
-      }
-
-      function isValidDigit(v) {
-        return /^[0-9]$/.test(v);
-      }
-
-      function readValues() {
-        const fields = getFields();
-        const values = fields.map((f) => f.value.trim());
-        const filled = values.filter((v) => v !== "").length;
-        const allValid = values.every((v) => isValidDigit(v));
-        return { values, filled, allValid };
-      }
-
-      // ========= board =========
-      function buildBoard() {
-        const board = $("#board");
-        board.innerHTML = "";
-        for (let i = 0; i < 9; i++) {
-          const cell = document.createElement("div");
-          cell.className = "cell";
-          cell.dataset.idx = String(i);
-
-          const inner = document.createElement("div");
-          inner.className = "cellInner";
-          inner.textContent = "—";
-
-          const tag = document.createElement("div");
-          tag.className = "cellTag";
-          tag.textContent = `#${i + 1}`;
-
-          cell.appendChild(inner);
-          cell.appendChild(tag);
-          board.appendChild(cell);
-        }
-      }
-
-      function syncBoardCell(index, value) {
-        const cell = document.querySelector(`.cell[data-idx="${index}"]`);
-        if (!cell) return;
-        const inner = cell.querySelector(".cellInner");
-
-        cell.dataset.animate = "flip";
-        requestAnimationFrame(() => {
-          inner.textContent = value === "" ? "—" : value;
-          cell.dataset.animate = "pop";
-          setTimeout(() => (cell.dataset.animate = ""), 520);
-        });
-      }
-
-      // ========= inputs (garantido renderizar) =========
-      function distributeDigits(startIdx, digits) {
-        const fields = getFields();
-        let i = startIdx;
-        for (const ch of digits) {
-          if (i >= fields.length) break;
-          fields[i].value = ch;
-          syncBoardCell(i, ch);
-          i++;
-        }
-        updateStatus();
-        focusField(Math.min(i, fields.length - 1));
-      }
-
-      function buildInputs() {
-        const holder = $("#inputs");
-        holder.innerHTML = "";
-
-        for (let i = 0; i < 9; i++) {
-          const input = document.createElement("input");
-          input.className = "num";
-          input.type = "text";
-          input.inputMode = "numeric";
-          input.pattern = "[0-9]*";
-          input.maxLength = 1;
-          input.autocomplete = "off";
-          input.placeholder = String(i + 1);
-          input.dataset.idx = String(i);
-
-          input.addEventListener("input", () => {
-            const idx = Number(input.dataset.idx);
-            const digits = input.value.replace(/\D/g, "");
-
-            if (!digits) {
-              input.value = "";
-              syncBoardCell(idx, "");
-              updateStatus();
-              return;
-            }
-
-            if (digits.length === 1) {
-              input.value = digits[0];
-              syncBoardCell(idx, digits[0]);
-              updateStatus();
-              if (idx < 8) focusField(idx + 1);
-              return;
-            }
-
-            input.value = digits[0];
-            syncBoardCell(idx, digits[0]);
-            distributeDigits(idx + 1, digits.slice(1));
-          });
-
-          input.addEventListener("keydown", (e) => {
-            const idx = Number(input.dataset.idx);
-
-            if (e.key === "Backspace" && input.value === "") {
-              e.preventDefault();
-              focusField(idx - 1);
-              return;
-            }
-
-            if (e.key === "ArrowLeft") {
-              e.preventDefault();
-              focusField(idx - 1);
-              return;
-            }
-
-            if (e.key === "ArrowRight" || e.key === "Enter") {
-              e.preventDefault();
-              focusField(idx + 1);
-              return;
-            }
-
-            const isControl =
-              e.ctrlKey ||
-              e.metaKey ||
-              e.altKey ||
-              ["Tab", "Shift", "Escape", "Home", "End", "Delete"].includes(e.key);
-
-            if (isControl) return;
-
-            if (!/^\d$/.test(e.key)) e.preventDefault();
-          });
-
-          input.addEventListener("paste", (e) => {
-            e.preventDefault();
-            const idx = Number(input.dataset.idx);
-            const text = (e.clipboardData || window.clipboardData).getData("text") || "";
-            const digits = text.replace(/\D/g, "");
-            if (!digits) return toast("Cole só dígitos 🙂");
-            distributeDigits(idx, digits);
-          });
-
-          holder.appendChild(input);
-        }
-      }
-
-      // ========= pairs =========
-      function generatePairs(values) {
-        const pairs = [];
-        for (let i = 0; i < values.length; i++) {
-          for (let j = i + 1; j < values.length; j++) {
-            pairs.push({ i, j, a: values[i], b: values[j], concat: `${values[i]}${values[j]}` });
-          }
-        }
-        return pairs;
-      }
-
-      function renderPairs(pairs) {
-        const grid = $("#pairsGrid");
-        grid.innerHTML = "";
-        pairs.forEach((p, idx) => {
-          const chip = document.createElement("div");
-          chip.className = "chip";
-          chip.style.animationDelay = `${Math.min(idx * 18, 320)}ms`;
-
-          chip.innerHTML = `
-            <div class="chipMain">
-              <div>
-                <div class="chipVal">${p.concat}</div>
-                <div class="chipSmall">(${p.a}, ${p.b})</div>
-              </div>
-              <div class="chipSmall">${p.i + 1}-${p.j + 1}</div>
-            </div>
-          `;
-
-          chip.addEventListener("click", async () => {
-            try {
-              await navigator.clipboard.writeText(p.concat);
-              toast(`Copiado: ${p.concat}`);
-            } catch {
-              toast("Não consegui copiar (permissão do navegador).");
-            }
-          });
-
-          grid.appendChild(chip);
-        });
-      }
-
-      function buildCopyText(pairs) {
-        return pairs.map((p) => p.concat).join(" - ");
-      }
-
-      // ========= status & actions =========
-      function updateStatus() {
-        const { values, filled, allValid } = readValues();
-
-        $("#countHint").textContent = `${filled}/9 preenchidos`;
-        $("#btnGenerate").disabled = !(filled === 9 && allValid);
-
-        if (filled < 9) $("#statusText").textContent = "Preencha os 9 campos (0–9).";
-        else if (!allValid) $("#statusText").textContent = "Só aceito 1 dígito por campo (0–9).";
-        else $("#statusText").textContent = "Tudo certo. Bora gerar os pares!";
-
-        // reset “copy” até gerar
-        $("#btnCopy").disabled = true;
-        $("#pairsMeta").textContent = "—";
-
-        // sync board (garante consistência)
-        values.forEach((v, i) => syncBoardCell(i, v));
-        return { values, filled, allValid };
-      }
-
-      async function onGenerate() {
-        const { values, filled, allValid } = readValues();
-        if (!(filled === 9 && allValid)) return toast("Preenche os 9 dígitos (0–9) antes de gerar 😉");
-
-        const pairs = generatePairs(values);
-        renderPairs(pairs);
-        $("#pairsMeta").textContent = `${pairs.length} pares gerados (36 combinações)`;
-        $("#btnCopy").disabled = false;
-
-        toast("Pares gerados! 🚀");
-      }
-
-      async function onCopyAll() {
-        const { values, filled, allValid } = readValues();
-        if (!(filled === 9 && allValid)) return;
-
-        const pairs = generatePairs(values);
-        const text = buildCopyText(pairs);
-
-        try {
-          await navigator.clipboard.writeText(text);
-          toast("Lista completa copiada!");
-        } catch {
-          toast("Não consegui copiar (permissão do navegador).");
-        }
-      }
-
-      function onClear() {
-        const fields = getFields();
-        fields.forEach((f) => (f.value = ""));
-        $("#pairsGrid").innerHTML = "";
-        $("#pairsMeta").textContent = "—";
-        $("#btnCopy").disabled = true;
-
-        for (let i = 0; i < 9; i++) syncBoardCell(i, "");
-        updateStatus();
-        focusField(0);
-        toast("Limpo!");
-      }
-
-      function onExample() {
-        const example = "147036925"; // seu exemplo
-        distributeDigits(0, example);
-        toast("Exemplo aplicado!");
-        focusField(0);
-      }
-
-      // ========= init =========
-      buildInputs();  // ✅ cria os 9 campos
-      buildBoard();   // ✅ cria o tabuleiro
-      updateStatus();
-      focusField(0);
-
-      $("#btnGenerate").addEventListener("click", onGenerate);
-      $("#btnCopy").addEventListener("click", onCopyAll);
-      $("#btnClear").addEventListener("click", onClear);
-      $("#btnExample").addEventListener("click", onExample);
-    </script>
+    <script src="./src/app.js" defer></script>
   </body>
 </html>
